@@ -36,8 +36,6 @@ public class UserService  {
 
   public User addUser(UserRequestDTO userRequestDTO) {
 
-    System.out.println("Username exists: " + userRepository.existsByUsername(userRequestDTO.getUsername()));
-
     if (userRepository.existsByUsername(userRequestDTO.getUsername())) {
       throw new ExistedException("Username already exists");
     }
@@ -56,6 +54,21 @@ public class UserService  {
       newUser.setRole(Role.USER);
     }
     return userRepository.save(newUser);
+  }
+
+  public User updateUser(UUID id, UserRequestDTO userRequestDTO) {
+    User user = userRepository.findById(id).map(u -> {
+      Optional.ofNullable(userRequestDTO.getUsername()).ifPresent(u::setUsername);
+      Optional.ofNullable(userRequestDTO.getEmail()).ifPresent(u::setEmail);
+      Optional.ofNullable(userRequestDTO.getPassword()).ifPresent(u::setPassword);
+      Optional.ofNullable(userRequestDTO.getRole()).ifPresent(u::setRole);
+
+      return userRepository.save(u);
+    }).orElseThrow(
+            () -> new NotFoundException("User not found with id: " + id)
+    );
+
+    return user;
   }
 
   public void deleteUser(UUID id) {
